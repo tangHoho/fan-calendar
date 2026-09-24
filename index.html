@@ -274,8 +274,13 @@ label.f{display:block;font-size:14px;font-weight:700;margin:12px 0 4px}
       </span>
     </div>
     <div id="pickWrap">
-      <h4>點自己的頭像切換身分</h4>
+      <h4 id="mineHead">你的頭像</h4>
       <div class="members" id="memberPick"></div>
+    </div>
+    <div id="claimWrap" hidden>
+      <h4>還沒有人認領的頭像</h4>
+      <p class="hint" style="margin:-4px 0 8px">點了會先確認。認領之後，只有你能修改它、用它按「我要去」。</p>
+      <div class="members" id="claimPick"></div>
     </div>
     <h4 id="newHead">建立新頭像</h4>
     <div class="preview"><span class="av" id="pvAv"></span><strong id="pvName">暱稱</strong></div>
@@ -334,7 +339,7 @@ label.f{display:block;font-size:14px;font-weight:700;margin:12px 0 4px}
 
 <script type="module">
 /* ============ 版本 ============ */
-const APP_VERSION = "1.4.2";
+const APP_VERSION = "1.5.0";
 const APP_UPDATED = "2026-09-24";
 /* Firebase 金鑰放在同資料夾的 firebase-config.js，更新 index.html 不會蓋掉它 */
 /* ============================== */
@@ -539,7 +544,10 @@ function rsvpId(eid,mid){return eid+"__"+mid}
 function sortedEvents(){return Object.entries(S.events).map(([id,e])=>({id,...e})).filter(e=>e.date).sort((a,b)=>(a.date+(a.time||"99")).localeCompare(b.date+(b.time||"99")))}
 
 /* ---------- 畫面 ---------- */
+function mine(m){return !!m&&(S.mode!=="cloud"||(!!S.user&&m.ownerUid===S.user.uid))}
+function claimable(m){return !!m&&S.mode==="cloud"&&!m.ownerUid}
 function render(){
+  if(S.me&&S.members[S.me]&&!mine(S.members[S.me])){S.lastMe=S.me;S.me=null}
   const me=S.members[S.me];
   const av=avatar(me);av.id="meAv";$("meAv").replaceWith(av);
   $("meName").textContent=me?me.name:"選擇頭像";
@@ -692,15 +700,20 @@ let draft={}, seeds=[];
 function makeSeeds(keep){seeds=[];if(keep)seeds.push(keep);while(seeds.length<8)seeds.push(rndSeed())}
 
 function openWho(){
-  const list=Object.entries(S.members).sort((a,b)=>(a[1].name||"").localeCompare(b[1].name||""));
+  const all=Object.entries(S.members).sort((a,b)=>(a[1].name||"").localeCompare(b[1].name||""));
+  const list=all.filter(([,m])=>mine(m)), open=all.filter(([,m])=>claimable(m));
+  const chip=([id,m],onClick)=>{const b=document.createElement("button");b.type="button";b.className="member"+(id===S.me||id===S.lastMe?" cur":"");
+    b.appendChild(avatar(m));b.appendChild(document.createTextNode(m.name));b.addEventListener("click",onClick);return b};
   const mp=$("memberPick");mp.textContent="";
-  list.forEach(([id,m])=>{const b=document.createElement("button");b.type="button";b.className="member"+(id===S.me?" cur":"");
-    b.appendChild(avatar(m));b.appendChild(document.createTextNode(m.name));
-    b.addEventListener("click",()=>useMe(id));mp.appendChild(b)});
+  list.forEach(e=>mp.appendChild(chip(e,()=>useMe(e[0]))));
   $("pickWrap").hidden=!list.length;
+  $("mineHead").textContent=list.length>1?"點自己的頭像切換":"你的頭像";
+  const cp=$("claimPick");cp.textContent="";
+  open.forEach(e=>cp.appendChild(chip(e,()=>claim(e[0]))));
+  $("claimWrap").hidden=!open.length;
   drawAccount();
   const me=S.members[S.me];
-  $("newHead").textContent=me?"修改我的頭像":(list.length?"或建立新頭像":"建立頭像");
+  $("newHead").textContent=me?"修改我的頭像":((list.length||open.length)?"或建立新頭像":"建立頭像");
   $("saveMe").textContent=me?"儲存修改":"建立並使用";
   $("createNew").hidden=!me;
   $("nick").value=me?me.name:"";
@@ -784,6 +797,13 @@ $("photoFile").addEventListener("change",async e=>{
 });
 $("nick").addEventListener("input",()=>{drawPreview();const t=$("avText");if(t)t.placeholder=chars($("nick").value.trim())[0]||"吼"});
 
+async function claim(id){
+  const m=S.members[id];if(!m)return;
+  if(!confirm("「"+m.name+"」是你的頭像嗎？\n認領後只有你能修改它、用它按「我要去」。\n如果不是你的，請按取消。"))return;
+  $("whoErr").textContent="";
+  try{await put("members",id,{...m,ownerUid:S.user.uid,updatedAt:Date.now()});S.members[id]={...m,ownerUid:S.user.uid};useMe(id)}
+  catch(e){$("whoErr").textContent="認領失敗，可能已經被別人認領了。"}
+}
 async function saveMember(asNew){
   const name=$("nick").value.trim();
   if(!name){$("whoErr").textContent="請輸入暱稱。";$("nick").focus();return}
@@ -791,6 +811,7 @@ async function saveMember(asNew){
   if(Object.entries(S.members).some(([id,m])=>m.name===name&&id!==self)){$("whoErr").textContent="「"+name+"」已經有人用了，上面直接點它，或換個暱稱。";return}
   if(draft.kind==="photo"&&!draft.photo){$("whoErr").textContent="請先選一張照片。";return}
   const data={name,kind:draft.kind,color:draft.color,createdAt:self&&S.members[self].createdAt||Date.now(),updatedAt:Date.now()};
+  if(S.mode==="cloud"&&S.user)data.ownerUid=S.user.uid;
   if(draft.kind==="emoji")data.emoji=draft.emoji;
   if(draft.kind==="art"){data.style=draft.style;data.seed=draft.seed}
   if(draft.kind==="text")data.text=draft.text;
