@@ -6,8 +6,8 @@
 <meta name="app-version" content="">
 <title>追星行事曆</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="theme-color" content="#E0217A">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -85,6 +85,9 @@ h1{font-family:"Huninn","Noto Sans TC",sans-serif;font-weight:400;font-size:clam
 .ticket.salerow .stub{background:var(--butter);color:#2E1A47}
 .ticket.salerow .body{padding-top:12px;padding-bottom:12px}
 .salerow .kicker{font-size:13px;font-weight:700;color:var(--ink-soft)}
+.tzhint{font-size:13px;margin:6px 0 0;color:var(--ink-soft);min-height:1em}
+.tzhint b{color:var(--ink)}
+.local{font-size:13px;color:var(--ink-soft);margin-top:2px}
 .tp{display:flex;align-items:center;gap:6px}
 .tp select{flex:1;min-width:0}
 .tp b{font-weight:900}
@@ -248,7 +251,7 @@ label.f{display:block;font-size:14px;font-weight:700;margin:12px 0 4px}
     </div>
   </div>
   <div class="grid" id="grid" role="grid"></div>
-  <div class="legend" aria-hidden="true"><span><i style="background:var(--pop)"></i>活動</span><span><i style="background:var(--mint)"></i>我要去</span><span><i style="background:var(--butter)"></i>搶票</span></div>
+  <div class="legend" aria-hidden="true"><span><i style="background:var(--pop)"></i>活動</span><span><i style="background:var(--mint)"></i>我要去</span><span><i style="background:var(--butter)"></i>搶票</span><span>時間皆為台灣時間</span></div>
 
   <div class="list-head">
     <h3 id="listTitle"></h3>
@@ -313,6 +316,9 @@ label.f{display:block;font-size:14px;font-weight:700;margin:12px 0 4px}
       <div><label class="f" for="evDate">日期</label><input class="in" id="evDate" type="date" required></div>
       <div><label class="f" for="evTimeH">時間（24 小時制，可空白）</label><div class="tp"><select class="in" id="evTimeH" aria-label="時"></select><b>:</b><select class="in" id="evTimeM" aria-label="分"></select></div></div>
     </div>
+    <label class="f" for="evTz">上面填的是哪裡的時間</label>
+    <select class="in" id="evTz"></select>
+    <p class="tzhint" id="evTzHint"></p>
     <label class="f" for="evArtist">偶像／團體</label>
     <input class="in" id="evArtist" maxlength="30" placeholder="例如：Noey">
     <label class="f" for="evPlace">地點</label>
@@ -323,6 +329,9 @@ label.f{display:block;font-size:14px;font-weight:700;margin:12px 0 4px}
         <div><label class="f" for="evSaleDate">開賣日期</label><input class="in" id="evSaleDate" type="date"></div>
         <div><label class="f" for="evSaleH">開賣時間</label><div class="tp"><select class="in" id="evSaleH" aria-label="時"></select><b>:</b><select class="in" id="evSaleM" aria-label="分"></select></div></div>
       </div>
+      <label class="f" for="evSaleTz">開賣時間是哪裡的時間</label>
+      <select class="in" id="evSaleTz"></select>
+      <p class="tzhint" id="evSaleTzHint"></p>
       <label class="f" for="evSaleUrl">售票網址</label>
       <input class="in" id="evSaleUrl" type="url" maxlength="300" placeholder="https://tixcraft.com/…" inputmode="url">
     </fieldset>
@@ -339,7 +348,7 @@ label.f{display:block;font-size:14px;font-weight:700;margin:12px 0 4px}
 
 <script type="module">
 /* ============ 版本 ============ */
-const APP_VERSION = "1.5.0";
+const APP_VERSION = "1.6.1";
 const APP_UPDATED = "2026-09-24";
 /* Firebase 金鑰放在同資料夾的 firebase-config.js，更新 index.html 不會蓋掉它 */
 /* ============================== */
@@ -624,6 +633,8 @@ function ticket(e){
   body.appendChild(tr);
   if(e.artist){const a=document.createElement("span");a.className="artist";a.textContent=e.artist;body.appendChild(a)}
   if(e.place){const p=document.createElement("div");p.className="meta";p.textContent="📍 "+e.place;body.appendChild(p)}
+  const ll=localLine(e.date,e.time,e.tz);
+  if(ll){const p=document.createElement("div");p.className="local";p.textContent="🌏 "+ll;body.appendChild(p)}
   if(e.saleDate)body.appendChild(saleLine(e));
   if(e.note){const n=document.createElement("div");n.className="note";n.textContent=e.note;body.appendChild(n)}
   const crew=document.createElement("div");crew.className="crew";
@@ -643,7 +654,8 @@ function fmtDay(s){const d=parseYmd(s);return (d.getMonth()+1)+"/"+d.getDate()+"
 function safeUrl(u){return /^https?:\/\//i.test(u||"")?u:""}
 function saleLine(e){
   const s=document.createElement("div");s.className="sale-line";
-  s.appendChild(document.createTextNode("🎫 搶票 "+fmtDay(e.saleDate)+(e.saleTime?" "+e.saleTime:"")));
+  const sl=localLine(e.saleDate,e.saleTime,e.saleTz);
+  s.appendChild(document.createTextNode("🎫 搶票 "+fmtDay(e.saleDate)+(e.saleTime?" "+e.saleTime:"")+(sl?"（"+sl+"）":"")));
   const u=safeUrl(e.saleUrl);
   if(u){const a=document.createElement("a");a.href=u;a.target="_blank";a.rel="noopener";a.textContent="售票頁";s.appendChild(a)}
   return s;
@@ -662,8 +674,10 @@ function saleRow(e){
   const h=document.createElement("h4");h.className="ev-title";h.textContent=e.title;tr.appendChild(h);
   const ed=document.createElement("button");ed.type="button";ed.className="edit";ed.textContent="編輯";ed.addEventListener("click",()=>openEvent(e.id));tr.appendChild(ed);
   const meta=document.createElement("div");meta.className="meta";
-  meta.textContent="活動日 "+fmtDay(e.date)+(e.time?" "+e.time:"")+(e.saleTime?"，"+e.saleTime+" 開賣":"");
-  body.append(k,tr,meta);
+  meta.textContent="活動日 "+fmtDay(e.date)+(e.time?" "+e.time:"")+(e.saleTime?"，台灣時間 "+e.saleTime+" 開賣":"");
+  const sl=localLine(e.saleDate,e.saleTime,e.saleTz);
+  let slEl=null;if(sl){slEl=document.createElement("div");slEl.className="local";slEl.textContent="🌏 "+sl+" 開賣"}
+  body.append(k,tr,meta);if(slEl)body.appendChild(slEl);
   const u=safeUrl(e.saleUrl);
   if(u){const a=document.createElement("a");a.className="sale-line";a.href=u;a.target="_blank";a.rel="noopener";a.textContent="前往售票頁";body.appendChild(a)}
   const going=goingOf(e.id);
@@ -683,6 +697,53 @@ function fillTime(hId,mId){
 function setTime(hId,mId,v){const [hh,mm]=(v||"").split(":");$(hId).value=hh||"";$(mId).value=mm||"00";$(mId).disabled=!hh}
 function getTime(hId,mId){const hh=$(hId).value;return hh?hh+":"+($(mId).value||"00"):""}
 fillTime("evTimeH","evTimeM");fillTime("evSaleH","evSaleM");
+
+/* ---------- 時區：所有時間都存成台灣時間，輸入時可選當地時區 ---------- */
+const TW="Asia/Taipei";
+const ZONES=[
+  ["Asia/Taipei","台灣（UTC+8）"],["Asia/Bangkok","泰國（UTC+7）"],["Asia/Seoul","韓國（UTC+9）"],["Asia/Tokyo","日本（UTC+9）"],
+  ["Asia/Hong_Kong","香港／澳門（UTC+8）"],["Asia/Shanghai","中國（UTC+8）"],["Asia/Singapore","新加坡／馬來西亞（UTC+8）"],
+  ["Asia/Manila","菲律賓（UTC+8）"],["Asia/Ho_Chi_Minh","越南（UTC+7）"],["Asia/Jakarta","印尼雅加達（UTC+7）"],
+  ["Australia/Sydney","澳洲雪梨（夏令時間自動換算）"],["Europe/London","英國（夏令時間自動換算）"],["Europe/Paris","法國／德國（夏令時間自動換算）"],
+  ["America/Los_Angeles","美國西岸（夏令時間自動換算）"],["America/New_York","美國東岸（夏令時間自動換算）"]
+];
+const zoneShort=z=>{const f=ZONES.find(x=>x[0]===z);return f?f[1].replace(/（.*$/,""):z};
+function tzParts(ts,zone){
+  const o={};new Intl.DateTimeFormat("en-CA",{timeZone:zone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"})
+    .formatToParts(new Date(ts)).forEach(p=>{o[p.type]=p.value});
+  if(o.hour==="24")o.hour="00";return o;
+}
+function offsetAt(ts,zone){const o=tzParts(ts,zone);return Date.UTC(+o.year,o.month-1,+o.day,+o.hour,+o.minute)-Math.floor(ts/60000)*60000}
+function convertTz(date,time,from,to){
+  if(!date||!time||!from||!to||from===to)return {date,time};
+  try{
+    const [y,m,d]=date.split("-").map(Number),[hh,mm]=time.split(":").map(Number);
+    const guess=Date.UTC(y,m-1,d,hh,mm);
+    let ts=guess-offsetAt(guess,from);ts=guess-offsetAt(ts,from);
+    const o=tzParts(ts,to);return {date:o.year+"-"+o.month+"-"+o.day,time:o.hour+":"+o.minute};
+  }catch(e){return {date,time}}
+}
+function fillTz(id){const s=$(id);ZONES.forEach(([z,l])=>s.add(new Option(l,z)))}
+fillTz("evTz");fillTz("evSaleTz");
+let saleTzTouched=false;
+function tzHint(dateId,hId,mId,tzId,hintId){
+  const el=$(hintId),z=$(tzId).value,date=$(dateId).value,time=getTime(hId,mId);
+  el.textContent="";
+  if(z===TW||!date)return;
+  if(!time){el.textContent="沒有填時間，日期不換算。";return}
+  const t=convertTz(date,time,z,TW);
+  el.append("換算成台灣時間：");const b=document.createElement("b");b.textContent=fmtDay(t.date)+" "+t.time;el.appendChild(b);
+}
+const hintEv=()=>tzHint("evDate","evTimeH","evTimeM","evTz","evTzHint");
+const hintSale=()=>tzHint("evSaleDate","evSaleH","evSaleM","evSaleTz","evSaleTzHint");
+["evDate","evTimeH","evTimeM"].forEach(id=>$(id).addEventListener("change",hintEv));
+["evSaleDate","evSaleH","evSaleM"].forEach(id=>$(id).addEventListener("change",hintSale));
+$("evTz").addEventListener("change",()=>{if(!saleTzTouched){$("evSaleTz").value=$("evTz").value;hintSale()}hintEv()});
+$("evSaleTz").addEventListener("change",()=>{saleTzTouched=true;hintSale()});
+function localLine(date,time,zone){
+  if(!zone||zone===TW||!time)return "";
+  const l=convertTz(date,time,TW,zone);return zoneShort(zone)+"當地 "+fmtDay(l.date)+" "+l.time;
+}
 
 /* ---------- 動作 ---------- */
 let pendingJoin=null;
@@ -830,9 +891,13 @@ let editing=null;
 function openEvent(id){
   editing=id||null;const e=id?S.events[id]:{};
   $("evHead").textContent=id?"編輯活動":"新增活動";
-  $("evTitle").value=e.title||"";$("evDate").value=e.date||S.sel||ymd(new Date());
-  setTime("evTimeH","evTimeM",e.time);setTime("evSaleH","evSaleM",e.saleTime);
-  $("evSaleDate").value=e.saleDate||"";$("evSaleUrl").value=e.saleUrl||"";
+  const tz=ZONES.some(z=>z[0]===e.tz)?e.tz:TW, stz=ZONES.some(z=>z[0]===e.saleTz)?e.saleTz:tz;
+  const lv=convertTz(e.date,e.time,TW,tz), ls=convertTz(e.saleDate,e.saleTime,TW,stz);
+  $("evTz").value=tz;$("evSaleTz").value=stz;saleTzTouched=!!id&&stz!==tz;
+  $("evTitle").value=e.title||"";$("evDate").value=lv.date||S.sel||ymd(new Date());
+  setTime("evTimeH","evTimeM",lv.time);setTime("evSaleH","evSaleM",ls.time);
+  $("evSaleDate").value=ls.date||"";$("evSaleUrl").value=e.saleUrl||"";
+  hintEv();hintSale();
   $("evArtist").value=e.artist||"";$("evPlace").value=e.place||"";$("evNote").value=e.note||"";
   $("evDel").hidden=!id;$("evErr").textContent="";
   $("evDlg").showModal();$("evTitle").focus();
@@ -845,6 +910,9 @@ $("evForm").addEventListener("submit",async ev=>{
   if(!data.title||!data.date){$("evErr").textContent="活動名稱和日期都要填。";return}
   if(!data.saleDate&&data.saleTime){$("evErr").textContent="填了開賣時間，也要填開賣日期。";return}
   if(data.saleUrl&&!safeUrl(data.saleUrl)){$("evErr").textContent="售票網址要以 https:// 開頭。";return}
+  data.tz=$("evTz").value;data.saleTz=$("evSaleTz").value;
+  const tv=convertTz(data.date,data.time,data.tz,TW);data.date=tv.date;data.time=tv.time;
+  if(data.saleDate){const ts=convertTz(data.saleDate,data.saleTime,data.saleTz,TW);data.saleDate=ts.date;data.saleTime=ts.time}
   const id=editing||uid();
   data.createdBy=(editing&&S.events[editing]&&S.events[editing].createdBy)||S.me||"";
   data.updatedAt=Date.now();
