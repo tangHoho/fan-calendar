@@ -1,0 +1,1065 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="app-version" content="">
+  <title>追星行事曆</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎀</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700;900&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --paper: #F7EEF6;
+      --card: #FFFFFF;
+      --ink: #2E1A47;
+      --ink-soft: #6E5A86;
+      --line: #E4D3E6;
+      --pop: #E0217A;
+      --pop-ink: #FFFFFF;
+      --mint: #1FA38A;
+      --butter: #FFD84D;
+      --shade: rgba(46, 26, 71, .12);
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --paper: #1C1428;
+        --card: #2A1F3A;
+        --ink: #F4E9F7;
+        --ink-soft: #B8A5CC;
+        --line: #403352;
+        --pop: #FF4F9D;
+        --pop-ink: #1C1428;
+        --mint: #4FD6BC;
+        --butter: #FFD84D;
+        --shade: rgba(0, 0, 0, .35);
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --paper: #1C1428;
+      --card: #2A1F3A;
+      --ink: #F4E9F7;
+      --ink-soft: #B8A5CC;
+      --line: #403352;
+      --pop: #FF4F9D;
+      --pop-ink: #1C1428;
+      --mint: #4FD6BC;
+      --butter: #FFD84D;
+      --shade: rgba(0, 0, 0, .35);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: inherit
+    }
+
+    html {
+      scroll-padding-top: env(safe-area-inset-top, 0px)
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.55
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+      color: inherit
+    }
+
+    button {
+      cursor: pointer
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--pop);
+      outline-offset: 2px
+    }
+
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 16px 16px 120px
+    }
+
+    /* header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0 16px
+    }
+
+    h1 {
+      font-family: "Huninn", "Noto Sans TC", sans-serif;
+      font-weight: 400;
+      font-size: clamp(28px, 7vw, 40px);
+      line-height: 1.1;
+      margin: 0;
+      letter-spacing: .02em
+    }
+
+    .me-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 2px solid var(--ink);
+      background: var(--card);
+      border-radius: 999px;
+      padding: 4px 14px 4px 4px;
+      font-weight: 700;
+      font-size: 14px
+    }
+
+    .me-btn .av {
+      width: 32px;
+      height: 32px;
+      font-size: 18px
+    }
+
+    /* month nav */
+    .month {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 4px 0 10px
+    }
+
+    .month h2 {
+      font-family: "Huninn", "Noto Sans TC", sans-serif;
+      font-weight: 400;
+      font-size: 22px;
+      margin: 0
+    }
+
+    .nav {
+      display: flex;
+      gap: 6px
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid var(--line);
+      background: var(--card);
+      font-size: 18px;
+      display: grid;
+      place-items: center
+    }
+
+    .text-btn {
+      border: none;
+      background: none;
+      color: var(--ink-soft);
+      font-size: 14px;
+      text-decoration: underline;
+      padding: 8px
+    }
+
+    /* grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
+      background: var(--card);
+      border: 2px solid var(--ink);
+      border-radius: 18px;
+      padding: 8px
+    }
+
+    .dow {
+      text-align: center;
+      font-size: 12px;
+      color: var(--ink-soft);
+      padding: 2px 0 6px;
+      font-weight: 700
+    }
+
+    .day {
+      aspect-ratio: 1/1;
+      border: none;
+      background: transparent;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 5px 0 0;
+      font-size: 14px;
+      position: relative;
+      min-height: 38px
+    }
+
+    .day.out {
+      color: var(--ink-soft);
+      opacity: .35
+    }
+
+    .day.today .n {
+      background: var(--ink);
+      color: var(--paper);
+      border-radius: 999px;
+      padding: 0 7px
+    }
+
+    .day.sel {
+      background: var(--butter);
+      color: #2E1A47
+    }
+
+    .day.sel .n {
+      color: #2E1A47
+    }
+
+    .day:hover:not(.sel) {
+      background: var(--paper)
+    }
+
+    .dots {
+      display: flex;
+      gap: 3px;
+      margin-top: 4px
+    }
+
+    .dots i {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--pop)
+    }
+
+    .dots i.mine {
+      background: var(--mint)
+    }
+
+    /* list */
+    .list-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin: 24px 0 10px
+    }
+
+    .list-head h3 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 900
+    }
+
+    .tickets {
+      display: flex;
+      flex-direction: column;
+      gap: 14px
+    }
+
+    .ticket {
+      display: grid;
+      grid-template-columns: 88px 1fr;
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: 0 3px 0 var(--shade);
+      position: relative;
+      overflow: hidden
+    }
+
+    .stub {
+      background: var(--pop);
+      color: var(--pop-ink);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 6px;
+      position: relative;
+      text-align: center
+    }
+
+    .ticket.going .stub {
+      background: var(--mint)
+    }
+
+    .stub .md {
+      font-family: "Huninn", "Noto Sans TC", sans-serif;
+      font-size: 26px;
+      line-height: 1
+    }
+
+    .stub .wd {
+      font-size: 13px;
+      margin-top: 6px;
+      font-weight: 700;
+      opacity: .9
+    }
+
+    .stub .tm {
+      font-size: 13px;
+      margin-top: 2px;
+      opacity: .9
+    }
+
+    /* perforation */
+    .stub::after {
+      content: "";
+      position: absolute;
+      right: -6px;
+      top: 0;
+      bottom: 0;
+      width: 12px;
+      background: radial-gradient(circle at 6px 8px, var(--card) 4px, transparent 4.5px) 0 0/12px 16px repeat-y
+    }
+
+    .body {
+      padding: 14px 16px 14px 20px;
+      min-width: 0
+    }
+
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: flex-start
+    }
+
+    .ev-title {
+      font-weight: 900;
+      font-size: 17px;
+      line-height: 1.35;
+      margin: 0;
+      word-break: break-word;
+      background: none;
+      border: none;
+      padding: 0;
+      text-align: left
+    }
+
+    .edit {
+      flex: none;
+      border: none;
+      background: none;
+      color: var(--ink-soft);
+      font-size: 13px;
+      padding: 2px 4px;
+      text-decoration: underline
+    }
+
+    .meta {
+      font-size: 14px;
+      color: var(--ink-soft);
+      margin-top: 2px;
+      word-break: break-word
+    }
+
+    .artist {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1.5px solid var(--ink);
+      border-radius: 999px;
+      padding: 0 8px;
+      margin: 6px 6px 0 0;
+      color: var(--ink)
+    }
+
+    .note {
+      font-size: 14px;
+      margin-top: 6px;
+      white-space: pre-wrap;
+      word-break: break-word
+    }
+
+    .crew {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+      align-items: center
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 999px;
+      padding: 2px 10px 2px 2px;
+      font-size: 13px;
+      font-weight: 700;
+      background: var(--paper)
+    }
+
+    .chip .av {
+      width: 24px;
+      height: 24px;
+      font-size: 14px
+    }
+
+    .join {
+      margin-left: auto;
+      border: 2px solid var(--ink);
+      background: var(--card);
+      border-radius: 999px;
+      padding: 4px 14px;
+      font-weight: 700;
+      font-size: 14px
+    }
+
+    .join.on {
+      background: var(--mint);
+      border-color: var(--mint);
+      color: #fff
+    }
+
+    .nobody {
+      font-size: 13px;
+      color: var(--ink-soft)
+    }
+
+    .av {
+      display: inline-grid;
+      place-items: center;
+      border-radius: 50%;
+      flex: none;
+      line-height: 1
+    }
+
+    .empty {
+      border: 2px dashed var(--line);
+      border-radius: 16px;
+      padding: 28px 16px;
+      text-align: center;
+      color: var(--ink-soft)
+    }
+
+    .fab {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      border: none;
+      background: var(--ink);
+      color: var(--paper);
+      border-radius: 999px;
+      padding: 14px 26px;
+      font-weight: 900;
+      font-size: 16px;
+      box-shadow: 0 6px 18px var(--shade)
+    }
+
+    .version {
+      font-size: 12px;
+      color: var(--ink-soft);
+      text-align: center;
+      margin-top: 4px;
+      opacity: .8
+    }
+
+    .status {
+      font-size: 12px;
+      color: var(--ink-soft);
+      text-align: center;
+      margin-top: 28px
+    }
+
+    .banner {
+      background: var(--butter);
+      color: #2E1A47;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 14px;
+      margin-bottom: 12px;
+      display: none
+    }
+
+    .banner.show {
+      display: block
+    }
+
+    /* sheets */
+    dialog {
+      border: none;
+      padding: 0;
+      background: var(--card);
+      color: var(--ink);
+      border-radius: 22px;
+      width: min(520px, calc(100% - 24px));
+      max-height: calc(100% - 40px);
+      overflow: auto
+    }
+
+    dialog::backdrop {
+      background: rgba(28, 20, 40, .55)
+    }
+
+    @media (max-width:560px) {
+      dialog {
+        margin: auto auto 0;
+        width: 100%;
+        max-width: 100%;
+        border-radius: 22px 22px 0 0;
+        padding-bottom: env(safe-area-inset-bottom, 0px)
+      }
+    }
+
+    .sheet {
+      padding: 20px
+    }
+
+    .sheet h2 {
+      font-family: "Huninn", "Noto Sans TC", sans-serif;
+      font-weight: 400;
+      font-size: 24px;
+      margin: 0 0 14px
+    }
+
+    .sheet h4 {
+      font-size: 14px;
+      margin: 18px 0 8px;
+      color: var(--ink-soft);
+      font-weight: 700
+    }
+
+    label.f {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      margin: 12px 0 4px
+    }
+
+    .in {
+      width: 100%;
+      border: 2px solid var(--line);
+      background: var(--paper);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 16px
+    }
+
+    .in:focus {
+      border-color: var(--ink);
+      outline: none
+    }
+
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px
+    }
+
+    .members {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px
+    }
+
+    .member {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 2px solid var(--line);
+      background: var(--paper);
+      border-radius: 999px;
+      padding: 3px 12px 3px 3px;
+      font-weight: 700;
+      font-size: 14px
+    }
+
+    .member.cur {
+      border-color: var(--ink)
+    }
+
+    .member .av {
+      width: 30px;
+      height: 30px;
+      font-size: 17px
+    }
+
+    .emojis {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 6px
+    }
+
+    .emo {
+      aspect-ratio: 1;
+      border: 2px solid transparent;
+      background: var(--paper);
+      border-radius: 12px;
+      font-size: 22px;
+      display: grid;
+      place-items: center;
+      padding: 0
+    }
+
+    .emo[aria-pressed="true"] {
+      border-color: var(--ink)
+    }
+
+    .colors {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px
+    }
+
+    .sw {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      padding: 0
+    }
+
+    .sw[aria-pressed="true"] {
+      border-color: var(--ink);
+      box-shadow: inset 0 0 0 3px var(--card)
+    }
+
+    .preview {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 14px
+    }
+
+    .preview .av {
+      width: 48px;
+      height: 48px;
+      font-size: 26px
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+      flex-wrap: wrap
+    }
+
+    .btn {
+      border: 2px solid var(--ink);
+      background: var(--card);
+      border-radius: 999px;
+      padding: 10px 20px;
+      font-weight: 700
+    }
+
+    .btn.primary {
+      background: var(--ink);
+      color: var(--paper)
+    }
+
+    .btn.danger {
+      border-color: #C43B3B;
+      color: #C43B3B;
+      margin-right: auto
+    }
+
+    .err {
+      color: #C43B3B;
+      font-size: 14px;
+      margin-top: 8px;
+      min-height: 1em
+    }
+
+    @media (prefers-reduced-motion:no-preference) {
+      .ticket.pulse {
+        animation: pulse .5s ease
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1)
+        }
+
+        40% {
+          transform: scale(1.015)
+        }
+
+        100% {
+          transform: scale(1)
+        }
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <h1>追星行事曆</h1>
+      <button class="me-btn" id="meBtn" type="button"><span class="av" id="meAv"
+          style="background:var(--line)">?</span><span id="meName">選擇頭像</span></button>
+    </header>
+    <div class="banner" id="banner"></div>
+
+    <div class="month">
+      <h2 id="monthLabel"></h2>
+      <div class="nav">
+        <button class="text-btn" id="todayBtn" type="button">今天</button>
+        <button class="icon-btn" id="prevBtn" type="button" aria-label="上個月">‹</button>
+        <button class="icon-btn" id="nextBtn" type="button" aria-label="下個月">›</button>
+      </div>
+    </div>
+    <div class="grid" id="grid" role="grid"></div>
+
+    <div class="list-head">
+      <h3 id="listTitle"></h3>
+      <button class="text-btn" id="clearSel" type="button" hidden>看整個月</button>
+    </div>
+    <div class="tickets" id="tickets"></div>
+    <p class="status" id="status">載入中…</p>
+    <p class="version" id="version"></p>
+  </div>
+
+  <button class="fab" id="addBtn" type="button">＋ 新增活動</button>
+
+  <!-- identity sheet -->
+  <dialog id="whoDlg">
+    <form class="sheet" method="dialog" id="whoForm">
+      <h2>你是誰？</h2>
+      <div id="pickWrap">
+        <h4>點自己的頭像</h4>
+        <div class="members" id="memberPick"></div>
+        <h4 id="newHead">或建立新頭像</h4>
+      </div>
+      <label class="f" for="nick">暱稱</label>
+      <input class="in" id="nick" maxlength="12" placeholder="例如：吼、ZAN" autocomplete="off">
+      <h4>頭像</h4>
+      <div class="emojis" id="emojiPick"></div>
+      <h4>顏色</h4>
+      <div class="colors" id="colorPick"></div>
+      <div class="preview"><span class="av" id="pvAv"></span><strong id="pvName">暱稱</strong></div>
+      <p class="err" id="whoErr"></p>
+      <div class="actions">
+        <button class="btn" value="cancel" type="submit" formnovalidate>取消</button>
+        <button class="btn primary" id="saveMe" type="button">建立並使用</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- event sheet -->
+  <dialog id="evDlg">
+    <form class="sheet" id="evForm">
+      <h2 id="evHead">新增活動</h2>
+      <label class="f" for="evTitle">活動名稱</label>
+      <input class="in" id="evTitle" required maxlength="60" placeholder="例如：Noey's Run club 2">
+      <div class="row2">
+        <div><label class="f" for="evDate">日期</label><input class="in" id="evDate" type="date" required></div>
+        <div><label class="f" for="evTime">時間（可空白）</label><input class="in" id="evTime" type="time"></div>
+      </div>
+      <label class="f" for="evArtist">偶像／團體</label>
+      <input class="in" id="evArtist" maxlength="30" placeholder="例如：Noey">
+      <label class="f" for="evPlace">地點</label>
+      <input class="in" id="evPlace" maxlength="60" placeholder="例如：大佳河濱公園">
+      <label class="f" for="evNote">備註</label>
+      <textarea class="in" id="evNote" rows="3" maxlength="400" placeholder="售票時間、集合地點、應援物…"></textarea>
+      <p class="err" id="evErr"></p>
+      <div class="actions">
+        <button class="btn danger" id="evDel" type="button" hidden>刪除活動</button>
+        <button class="btn" id="evCancel" type="button">取消</button>
+        <button class="btn primary" type="submit" id="evSave">儲存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module">
+    /* ============ 設定區 ============ */
+    const APP_VERSION = "1.0.0";
+    const APP_UPDATED = "2026-09-24";
+
+    // 把 Firebase 後台「專案設定 → 你的應用程式」裡的設定貼在這裡
+    const firebaseConfig = {
+      apiKey: "AIzaSyDmtunGK9w5piCoGvqCqI_s6V3XMvCKvs4",
+      authDomain: "fan-calendar-fb059.firebaseapp.com",
+      projectId: "fan-calendar-fb059",
+      storageBucket: "fan-calendar-fb059.firebasestorage.app",
+      messagingSenderId: "72738683476",
+      appId: "1:72738683476:web:c4e0495a22790422964bc1",
+      measurementId: "G-0BQ67431GM"
+    };
+    /* ================================ */
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const EMOJIS = ["🐯", "🐰", "🐻", "🐱", "🐶", "🦊", "🐼", "🐨", "🐸", "🐥", "🐧", "🦄", "🐹", "🐷", "🐙", "🦋", "🌸", "⭐", "🍓", "🍑", "🧸", "🎀", "🌙", "🍀"];
+    const COLORS = ["#FFC2DC", "#D9C8FF", "#BDEBDD", "#FFD9B0", "#C4DDFF", "#FFEFA8", "#FFC4C4", "#D6DDE4"];
+    const WD = ["日", "一", "二", "三", "四", "五", "六"];
+    const $ = id => document.getElementById(id);
+
+    $("version").textContent = "版本 v" + APP_VERSION + "（" + APP_UPDATED + "）";
+    document.querySelector('meta[name="app-version"]').content = APP_VERSION;
+
+    const LS_ME = "fancal.me", LS_LOCAL = "fancal.local";
+    function lsGet(k) { try { return localStorage.getItem(k) } catch (e) { return null } }
+    function lsSet(k, v) { try { localStorage.setItem(k, v) } catch (e) { } }
+
+    const S = { members: {}, events: {}, rsvps: {}, me: lsGet(LS_ME), cursor: new Date(), sel: null, mode: "loading", readOnly: false, lastJoined: null };
+    S.cursor.setDate(1);
+
+    /* ---------- 資料層 ---------- */
+    let fs = null;
+    const local = {
+      load() { try { const d = JSON.parse(lsGet(LS_LOCAL) || "{}"); S.members = d.members || {}; S.events = d.events || {}; S.rsvps = d.rsvps || {} } catch (e) { } },
+      save() { lsSet(LS_LOCAL, JSON.stringify({ members: S.members, events: S.events, rsvps: S.rsvps })) }
+    };
+    function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8) }
+    function handleErr(e) {
+      if (e && e.code === "permission-denied") { showBanner("資料庫拒絕寫入。請確認 Firestore 安全規則已發布、匿名登入已啟用。"); return }
+      showBanner("沒有存到，請檢查網路後再試一次。");
+      throw e;
+    }
+    async function put(col, id, data) {
+      if (S.mode === "cloud") { try { await setDoc(doc(fs, col, id), data) } catch (e) { handleErr(e) } }
+      else { S[col][id] = data; local.save(); render() }
+    }
+    async function del(col, id) {
+      if (S.mode === "cloud") { try { await deleteDoc(doc(fs, col, id)) } catch (e) { handleErr(e) } }
+      else { delete S[col][id]; local.save(); render() }
+    }
+    async function delEventWithRsvps(eid) {
+      const ids = goingOf(eid).map(m => rsvpId(eid, m));
+      if (S.mode === "cloud") {
+        const b = writeBatch(fs); ids.forEach(r => b.delete(doc(fs, "rsvps", r))); b.delete(doc(fs, "events", eid));
+        try { await b.commit() } catch (e) { handleErr(e) }
+      } else { ids.forEach(r => delete S.rsvps[r]); delete S.events[eid]; local.save(); render() }
+    }
+
+    function subscribe(col) {
+      onSnapshot(collection(fs, col), snap => {
+        const o = {}; snap.forEach(d => { o[d.id] = d.data() }); S[col] = o; S.loaded[col] = true;
+        if (S.mode === "loading" && S.loaded.members && S.loaded.events && S.loaded.rsvps) S.mode = "cloud";
+        render();
+      }, err => {
+        if (err.code === "permission-denied") showBanner("無法讀取資料：請確認 Firestore 安全規則已發布。");
+        else setStatus("同步中斷，請重新整理頁面。");
+      });
+    }
+
+    function configured() { return firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("填入") && firebaseConfig.projectId && !firebaseConfig.projectId.includes("你的") }
+
+    async function boot() {
+      render();
+      if (!configured()) {
+        S.mode = "local"; local.load();
+        showBanner("還沒填 Firebase 設定，目前是單機模式：資料只存在這台裝置，朋友看不到。");
+        setStatus("單機模式"); render(); return;
+      }
+      try {
+        const app = initializeApp(firebaseConfig);
+        fs = getFirestore(app);
+        const auth = getAuth(app);
+        onAuthStateChanged(auth, u => {
+          if (u && !S.loaded) { S.loaded = {};["members", "events", "rsvps"].forEach(subscribe); setStatus("已連線，朋友新增的活動會即時出現") }
+        });
+        await signInAnonymously(auth);
+      } catch (e) {
+        S.mode = "local"; local.load();
+        showBanner("連不上 Firebase（" + (e.code || "未知錯誤") + "），目前改用單機模式。請確認已啟用匿名登入。");
+        setStatus("單機模式"); render();
+      }
+    }
+
+    /* ---------- 小工具 ---------- */
+    const pad = n => String(n).padStart(2, "0");
+    const ymd = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+    function parseYmd(s) { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d) }
+    function setStatus(t) { $("status").textContent = t }
+    function showBanner(t) { const b = $("banner"); b.textContent = t; b.classList.add("show") }
+    function avatar(m) { const s = document.createElement("span"); s.className = "av"; s.style.background = m ? m.color : "var(--line)"; s.textContent = m ? m.emoji : "?"; s.setAttribute("aria-hidden", "true"); return s }
+    function goingOf(eid) { return Object.values(S.rsvps).filter(r => r.eventId === eid && S.members[r.memberId]).sort((a, b) => (a.at || 0) - (b.at || 0)).map(r => r.memberId) }
+    function rsvpId(eid, mid) { return eid + "__" + mid }
+    function sortedEvents() { return Object.entries(S.events).map(([id, e]) => ({ id, ...e })).filter(e => e.date).sort((a, b) => (a.date + (a.time || "99")).localeCompare(b.date + (b.time || "99"))) }
+
+    /* ---------- 畫面 ---------- */
+    function render() {
+      const me = S.members[S.me];
+      const av = avatar(me); av.id = "meAv"; $("meAv").replaceWith(av);
+      $("meName").textContent = me ? me.name : "選擇頭像";
+
+      const y = S.cursor.getFullYear(), m = S.cursor.getMonth();
+      $("monthLabel").textContent = y + " 年 " + (m + 1) + " 月";
+
+      const evs = sortedEvents();
+      const byDay = {}; evs.forEach(e => { (byDay[e.date] = byDay[e.date] || []).push(e) });
+
+      const g = $("grid"); g.textContent = "";
+      WD.forEach(w => { const d = document.createElement("div"); d.className = "dow"; d.textContent = w; g.appendChild(d) });
+      const first = new Date(y, m, 1), start = new Date(y, m, 1 - first.getDay());
+      const today = ymd(new Date());
+      const weeks = Math.ceil((first.getDay() + new Date(y, m + 1, 0).getDate()) / 7);
+      for (let i = 0; i < weeks * 7; i++) {
+        const d = new Date(start); d.setDate(start.getDate() + i); const key = ymd(d);
+        const b = document.createElement("button"); b.type = "button"; b.className = "day";
+        if (d.getMonth() !== m) b.classList.add("out");
+        if (key === today) b.classList.add("today");
+        if (key === S.sel) b.classList.add("sel");
+        const n = document.createElement("span"); n.className = "n"; n.textContent = d.getDate(); b.appendChild(n);
+        const list = byDay[key] || [];
+        if (list.length) {
+          const dots = document.createElement("span"); dots.className = "dots";
+          list.slice(0, 3).forEach(e => { const i = document.createElement("i"); if (S.me && S.rsvps[rsvpId(e.id, S.me)]) i.className = "mine"; dots.appendChild(i) }); b.appendChild(dots)
+        }
+        b.setAttribute("aria-label", (d.getMonth() + 1) + "月" + d.getDate() + "日，" + (list.length ? list.length + " 個活動" : "沒有活動"));
+        b.addEventListener("click", () => {
+          if (d.getMonth() !== m) S.cursor = new Date(d.getFullYear(), d.getMonth(), 1);
+          S.sel = S.sel === key ? null : key; render()
+        });
+        g.appendChild(b);
+      }
+
+      const shown = S.sel ? (byDay[S.sel] || []) : evs.filter(e => { const d = parseYmd(e.date); return d.getFullYear() === y && d.getMonth() === m });
+      if (S.sel) { const d = parseYmd(S.sel); $("listTitle").textContent = (d.getMonth() + 1) + "/" + d.getDate() + "（" + WD[d.getDay()] + "）的活動" }
+      else $("listTitle").textContent = "這個月的活動";
+      $("clearSel").hidden = !S.sel;
+
+      const t = $("tickets"); t.textContent = "";
+      if (S.mode === "loading") return;
+      if (!shown.length) {
+        const e = document.createElement("div"); e.className = "empty";
+        e.textContent = (S.sel ? "這天" : "這個月") + "還沒有活動。按下方「新增活動」加一個。";
+        t.appendChild(e); return;
+      }
+      shown.forEach(e => t.appendChild(ticket(e)));
+    }
+
+    function ticket(e) {
+      const d = parseYmd(e.date); const going = goingOf(e.id); const iGo = S.me && going.includes(S.me);
+      const el = document.createElement("article"); el.className = "ticket" + (iGo ? " going" : "");
+      if (S.lastJoined === e.id) { el.classList.add("pulse"); S.lastJoined = null }
+      const stub = document.createElement("div"); stub.className = "stub";
+      stub.innerHTML = '<span class="md"></span><span class="wd"></span><span class="tm"></span>';
+      stub.querySelector(".md").textContent = (d.getMonth() + 1) + "/" + d.getDate();
+      stub.querySelector(".wd").textContent = "週" + WD[d.getDay()];
+      stub.querySelector(".tm").textContent = e.time || "";
+      const body = document.createElement("div"); body.className = "body";
+      const tr = document.createElement("div"); tr.className = "title-row";
+      const h = document.createElement("h4"); h.className = "ev-title"; h.textContent = e.title; tr.appendChild(h);
+      const ed = document.createElement("button"); ed.type = "button"; ed.className = "edit"; ed.textContent = "編輯"; ed.addEventListener("click", () => openEvent(e.id)); tr.appendChild(ed);
+      body.appendChild(tr);
+      if (e.artist) { const a = document.createElement("span"); a.className = "artist"; a.textContent = e.artist; body.appendChild(a) }
+      if (e.place) { const p = document.createElement("div"); p.className = "meta"; p.textContent = "📍 " + e.place; body.appendChild(p) }
+      if (e.note) { const n = document.createElement("div"); n.className = "note"; n.textContent = e.note; body.appendChild(n) }
+      const crew = document.createElement("div"); crew.className = "crew";
+      if (!going.length) { const s = document.createElement("span"); s.className = "nobody"; s.textContent = "還沒有人加入"; crew.appendChild(s) }
+      going.forEach(mid => { const mm = S.members[mid]; const c = document.createElement("span"); c.className = "chip"; c.appendChild(avatar(mm)); c.appendChild(document.createTextNode(mm.name)); crew.appendChild(c) });
+      const j = document.createElement("button"); j.type = "button"; j.className = "join" + (iGo ? " on" : "");
+      j.textContent = iGo ? "已加入 ✓" : "我要去";
+      j.setAttribute("aria-pressed", iGo ? "true" : "false");
+      j.addEventListener("click", () => toggleJoin(e.id, iGo));
+      crew.appendChild(j);
+      body.appendChild(crew);
+      el.appendChild(stub); el.appendChild(body);
+      return el;
+    }
+
+    /* ---------- 動作 ---------- */
+    let pendingJoin = null;
+    async function toggleJoin(eid, iGo) {
+      if (!S.me || !S.members[S.me]) { pendingJoin = eid; openWho(); return }
+      try {
+        if (iGo) await del("rsvps", rsvpId(eid, S.me));
+        else { S.lastJoined = eid; await put("rsvps", rsvpId(eid, S.me), { eventId: eid, memberId: S.me, at: Date.now() }) }
+      } catch (e) { }
+    }
+
+    let draft = { emoji: EMOJIS[0], color: COLORS[0] };
+    function openWho() {
+      const list = Object.entries(S.members).sort((a, b) => (a[1].name || "").localeCompare(b[1].name || ""));
+      const mp = $("memberPick"); mp.textContent = "";
+      list.forEach(([id, m]) => {
+        const b = document.createElement("button"); b.type = "button"; b.className = "member" + (id === S.me ? " cur" : "");
+        b.appendChild(avatar(m)); b.appendChild(document.createTextNode(m.name));
+        b.addEventListener("click", () => useMe(id)); mp.appendChild(b)
+      });
+      $("pickWrap").hidden = !list.length;
+      $("nick").value = ""; $("whoErr").textContent = "";
+      draft = { emoji: EMOJIS[Math.floor(Math.random() * EMOJIS.length)], color: COLORS[Math.floor(Math.random() * COLORS.length)] };
+      drawPickers(); $("whoDlg").showModal();
+    }
+    function useMe(id) {
+      S.me = id; lsSet(LS_ME, id); $("whoDlg").close(); render();
+      if (pendingJoin) { const e = pendingJoin; pendingJoin = null; if (!goingOf(e).includes(id)) toggleJoin(e, false) }
+    }
+    function drawPickers() {
+      const ep = $("emojiPick"); ep.textContent = "";
+      EMOJIS.forEach(x => { const b = document.createElement("button"); b.type = "button"; b.className = "emo"; b.textContent = x; b.setAttribute("aria-pressed", x === draft.emoji); b.setAttribute("aria-label", "頭像 " + x); b.addEventListener("click", () => { draft.emoji = x; drawPickers() }); ep.appendChild(b) });
+      const cp = $("colorPick"); cp.textContent = "";
+      COLORS.forEach(c => { const b = document.createElement("button"); b.type = "button"; b.className = "sw"; b.style.background = c; b.setAttribute("aria-pressed", c === draft.color); b.setAttribute("aria-label", "顏色 " + c); b.addEventListener("click", () => { draft.color = c; drawPickers() }); cp.appendChild(b) });
+      const pv = avatar(draft); pv.id = "pvAv"; $("pvAv").replaceWith(pv);
+      $("pvName").textContent = $("nick").value.trim() || "暱稱";
+    }
+    $("nick").addEventListener("input", () => { $("pvName").textContent = $("nick").value.trim() || "暱稱" });
+    $("saveMe").addEventListener("click", async () => {
+      const name = $("nick").value.trim();
+      if (!name) { $("whoErr").textContent = "請輸入暱稱。"; $("nick").focus(); return }
+      if (Object.values(S.members).some(m => m.name === name)) { $("whoErr").textContent = "「" + name + "」已經有人用了，上面直接點它，或換個暱稱。"; return }
+      const id = uid();
+      try { await put("members", id, { name, emoji: draft.emoji, color: draft.color, createdAt: Date.now() }); useMe(id) }
+      catch (e) { $("whoErr").textContent = "沒有存到，請再試一次。" }
+    });
+    $("meBtn").addEventListener("click", openWho);
+
+    let editing = null;
+    function openEvent(id) {
+      editing = id || null; const e = id ? S.events[id] : {};
+      $("evHead").textContent = id ? "編輯活動" : "新增活動";
+      $("evTitle").value = e.title || ""; $("evDate").value = e.date || S.sel || ymd(new Date());
+      $("evTime").value = e.time || ""; $("evArtist").value = e.artist || ""; $("evPlace").value = e.place || ""; $("evNote").value = e.note || "";
+      $("evDel").hidden = !id; $("evErr").textContent = "";
+      $("evDlg").showModal(); $("evTitle").focus();
+    }
+    $("evCancel").addEventListener("click", () => $("evDlg").close());
+    $("evForm").addEventListener("submit", async ev => {
+      ev.preventDefault();
+      const data = { title: $("evTitle").value.trim(), date: $("evDate").value, time: $("evTime").value, artist: $("evArtist").value.trim(), place: $("evPlace").value.trim(), note: $("evNote").value.trim() };
+      if (!data.title || !data.date) { $("evErr").textContent = "活動名稱和日期都要填。"; return }
+      const id = editing || uid();
+      data.createdBy = (editing && S.events[editing] && S.events[editing].createdBy) || S.me || "";
+      data.updatedAt = Date.now();
+      $("evSave").disabled = true;
+      try {
+        await put("events", id, data); $("evDlg").close();
+        const d = parseYmd(data.date); S.cursor = new Date(d.getFullYear(), d.getMonth(), 1); if (S.sel && S.sel !== data.date) S.sel = null; render()
+      }
+      catch (e) { $("evErr").textContent = "沒有存到，請再試一次。" }
+      finally { $("evSave").disabled = false }
+    });
+    $("evDel").addEventListener("click", async () => {
+      if (!editing) return;
+      const title = S.events[editing] && S.events[editing].title;
+      if (!confirm("刪除「" + title + "」？所有人都會看不到這個活動。")) return;
+      try { await delEventWithRsvps(editing); $("evDlg").close() }
+      catch (e) { $("evErr").textContent = "沒有刪除成功，請再試一次。" }
+    });
+    $("addBtn").addEventListener("click", () => openEvent(null));
+
+    $("prevBtn").addEventListener("click", () => { S.cursor = new Date(S.cursor.getFullYear(), S.cursor.getMonth() - 1, 1); S.sel = null; render() });
+    $("nextBtn").addEventListener("click", () => { S.cursor = new Date(S.cursor.getFullYear(), S.cursor.getMonth() + 1, 1); S.sel = null; render() });
+    $("todayBtn").addEventListener("click", () => { const n = new Date(); S.cursor = new Date(n.getFullYear(), n.getMonth(), 1); S.sel = null; render() });
+    $("clearSel").addEventListener("click", () => { S.sel = null; render() });
+
+    boot();
+  </script>
+
+</body>
+
+</html>
