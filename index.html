@@ -106,25 +106,21 @@ fieldset.sale legend{font-weight:900;font-size:14px;padding:0 6px}
 .ticket.abroad .stub{overflow:hidden;padding-top:40px}
 .sky{position:absolute;top:0;left:0;right:12px;height:34px;pointer-events:none}
 .sky::before{content:"";position:absolute;left:8px;right:4px;top:19px;border-top:2px dotted currentColor;opacity:.35}
-.plane{position:absolute;top:8px;left:0;width:22px;height:22px;color:inherit}
+.plane{position:absolute;top:0;left:0;width:22px;height:22px;color:inherit;transform:translate(33px,9px)}
 .plane svg{display:block;width:100%;height:100%;fill:currentColor}
-.pill .pl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.15em;margin-right:1px}
+.pill .pl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.15em;margin-right:1px;transform:rotate(-45deg)}
 .pill .pl svg{width:100%;height:100%;fill:currentColor;display:block}
 .chk{display:flex;align-items:center;gap:10px;margin-top:14px;font-weight:700;font-size:15px;background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer}
 .chk input{width:20px;height:20px;accent-color:#2B6CB0;flex:none}
 .chk small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px}
 @media (prefers-reduced-motion:no-preference){
-  .plane{animation:fly 3.6s cubic-bezier(.45,.05,.55,.95) infinite}
-  @keyframes fly{
-    0%{transform:translate(-22px,4px) rotate(-14deg);opacity:0}
-    15%{opacity:1}
-    50%{transform:translate(28px,-3px) rotate(0deg)}
-    85%{opacity:1}
-    100%{transform:translate(80px,3px) rotate(12deg);opacity:0}}
+  /* 起飛：沿跑道加速，再順順拉起往右上飛走（機頭自動跟著路線轉向） */
+  .plane{offset-path:path("M -24 20 L 22 20 Q 56 20 112 -9");offset-rotate:auto;transform:none;animation:takeoff 3.4s cubic-bezier(.5,0,.85,.6) infinite}
+  @keyframes takeoff{0%{offset-distance:0%;opacity:0}8%{opacity:1}85%{opacity:1}100%{offset-distance:100%;opacity:0}}
   .pill .pl{animation:bob 1.6s ease-in-out infinite}
-  @keyframes bob{0%,100%{transform:translate(0,0)}50%{transform:translate(2px,-2px)}}
+  @keyframes bob{0%,100%{transform:translate(0,0) rotate(-45deg)}50%{transform:translate(2.1px,-2.1px) rotate(-45deg)}}
 }
-@media (prefers-reduced-motion:reduce){.plane{left:50%;margin-left:-11px}}
+
 .stub .md{font-family:"Huninn","Noto Sans TC",sans-serif;font-size:26px;line-height:1}
 .stub .wd{font-size:13px;margin-top:6px;font-weight:700;opacity:.9}
 .stub .tm{font-size:13px;margin-top:2px;opacity:.9}
@@ -372,7 +368,7 @@ label.f{display:block;font-size:14px;font-weight:700;margin:12px 0 4px}
 
 <script type="module">
 /* ============ 版本 ============ */
-const APP_VERSION = "1.7.1";
+const APP_VERSION = "1.7.4";
 const APP_UPDATED = "2026-10-15";
 /* Firebase 金鑰放在同資料夾的 firebase-config.js，更新 index.html 不會蓋掉它 */
 /* ============================== */
