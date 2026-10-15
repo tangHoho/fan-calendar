@@ -102,6 +102,20 @@ fieldset.sale legend{font-weight:900;font-size:14px;padding:0 6px}
 .ticket{display:grid;grid-template-columns:88px 1fr;background:var(--card);border-radius:16px;box-shadow:0 3px 0 var(--shade);position:relative;overflow:hidden}
 .stub{background:var(--pop);color:var(--pop-ink);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 6px;position:relative;text-align:center}
 .ticket.going .stub{background:var(--mint)}
+.abroad-tag{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:900;border-radius:999px;padding:1px 9px;margin:6px 6px 0 0;background:#2B6CB0;color:#fff}
+.ticket.abroad .stub{overflow:hidden}
+.plane{position:absolute;top:8px;left:-24px;font-size:18px;line-height:1;pointer-events:none}
+.pill .pl{display:inline-block}
+.chk{display:flex;align-items:center;gap:10px;margin-top:14px;font-weight:700;font-size:15px;background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer}
+.chk input{width:20px;height:20px;accent-color:#2B6CB0;flex:none}
+.chk small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px}
+@media (prefers-reduced-motion:no-preference){
+  .plane{animation:fly 3.2s ease-in-out infinite}
+  @keyframes fly{0%{transform:translate(0,14px) rotate(-12deg);opacity:0}12%{opacity:1}80%{opacity:1}100%{transform:translate(124px,-6px) rotate(-12deg);opacity:0}}
+  .pill .pl{animation:bob 1.6s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translate(0,0)}50%{transform:translate(2px,-2px)}}
+}
+@media (prefers-reduced-motion:reduce){.plane{left:auto;right:6px;top:6px}}
 .stub .md{font-family:"Huninn","Noto Sans TC",sans-serif;font-size:26px;line-height:1}
 .stub .wd{font-size:13px;margin-top:6px;font-weight:700;opacity:.9}
 .stub .tm{font-size:13px;margin-top:2px;opacity:.9}
@@ -251,7 +265,7 @@ label.f{display:block;font-size:14px;font-weight:700;margin:12px 0 4px}
     </div>
   </div>
   <div class="grid" id="grid" role="grid"></div>
-  <div class="legend" aria-hidden="true"><span><i style="background:var(--pop)"></i>活動</span><span><i style="background:var(--mint)"></i>我要去</span><span><i style="background:var(--butter)"></i>搶票</span><span>時間皆為台灣時間</span></div>
+  <div class="legend" aria-hidden="true"><span><i style="background:var(--pop)"></i>活動</span><span><i style="background:var(--mint)"></i>我要去</span><span><i style="background:var(--butter)"></i>搶票</span><span>✈️ 出國追星</span><span>時間皆為台灣時間</span></div>
 
   <div class="list-head">
     <h3 id="listTitle"></h3>
@@ -319,6 +333,7 @@ label.f{display:block;font-size:14px;font-weight:700;margin:12px 0 4px}
     <label class="f" for="evTz">上面填的是哪裡的時間</label>
     <select class="in" id="evTz"></select>
     <p class="tzhint" id="evTzHint"></p>
+    <label class="chk" for="evAbroad"><input type="checkbox" id="evAbroad"><span>✈️ 出國追星<small>月曆和票券會加上小飛機</small></span></label>
     <label class="f" for="evArtist">偶像／團體</label>
     <input class="in" id="evArtist" maxlength="30" placeholder="例如：Noey">
     <label class="f" for="evPlace">地點</label>
@@ -348,8 +363,8 @@ label.f{display:block;font-size:14px;font-weight:700;margin:12px 0 4px}
 
 <script type="module">
 /* ============ 版本 ============ */
-const APP_VERSION = "1.6.1";
-const APP_UPDATED = "2026-09-24";
+const APP_VERSION = "1.7.0";
+const APP_UPDATED = "2026-10-15";
 /* Firebase 金鑰放在同資料夾的 firebase-config.js，更新 index.html 不會蓋掉它 */
 /* ============================== */
 let firebaseConfig=null, configError="";
@@ -588,7 +603,8 @@ function render(){
     pills.slice(0,showN).forEach(({e,sale})=>{
       const p=document.createElement("span");
       p.className="pill"+(sale?" sale":(S.me&&S.rsvps[rsvpId(e.id,S.me)]?" mine":""));
-      p.textContent=(sale&&!narrow?"🎫":"")+e.title;b.appendChild(p)});
+      if(e.abroad){const pl=document.createElement("span");pl.className="pl";pl.textContent="✈️";p.appendChild(pl)}
+      p.appendChild(document.createTextNode((sale&&!narrow?"🎫":"")+e.title));b.appendChild(p)});
     if(pills.length>showN){const mo=document.createElement("span");mo.className="more";mo.textContent="+"+(pills.length-showN);b.appendChild(mo)}
     const parts=[];if(list.length)parts.push(list.length+" 個活動");if(sales.length)parts.push(sales.length+" 個搶票");
     b.setAttribute("aria-label",(d.getMonth()+1)+"月"+d.getDate()+"日，"+(parts.join("、")||"沒有活動"));
@@ -619,7 +635,7 @@ function render(){
 
 function ticket(e){
   const d=parseYmd(e.date);const going=goingOf(e.id);const iGo=S.me&&going.includes(S.me);
-  const el=document.createElement("article");el.className="ticket"+(iGo?" going":"");
+  const el=document.createElement("article");el.className="ticket"+(iGo?" going":"")+(e.abroad?" abroad":"");
   if(S.lastJoined===e.id){el.classList.add("pulse");S.lastJoined=null}
   const stub=document.createElement("div");stub.className="stub";
   stub.innerHTML='<span class="md"></span><span class="wd"></span><span class="tm"></span>';
@@ -631,6 +647,7 @@ function ticket(e){
   const h=document.createElement("h4");h.className="ev-title";h.textContent=e.title;tr.appendChild(h);
   const ed=document.createElement("button");ed.type="button";ed.className="edit";ed.textContent="編輯";ed.addEventListener("click",()=>openEvent(e.id));tr.appendChild(ed);
   body.appendChild(tr);
+  if(e.abroad){const t=document.createElement("span");t.className="abroad-tag";t.textContent="✈️ 出國追星";body.appendChild(t)}
   if(e.artist){const a=document.createElement("span");a.className="artist";a.textContent=e.artist;body.appendChild(a)}
   if(e.place){const p=document.createElement("div");p.className="meta";p.textContent="📍 "+e.place;body.appendChild(p)}
   const ll=localLine(e.date,e.time,e.tz);
@@ -646,12 +663,14 @@ function ticket(e){
   j.addEventListener("click",()=>toggleJoin(e.id,iGo));
   crew.appendChild(j);
   body.appendChild(crew);
+  if(e.abroad)stub.appendChild(planeEl());
   el.appendChild(stub);el.appendChild(body);
   return el;
 }
 
 function fmtDay(s){const d=parseYmd(s);return (d.getMonth()+1)+"/"+d.getDate()+"（"+WD[d.getDay()]+"）"}
 function safeUrl(u){return /^https?:\/\//i.test(u||"")?u:""}
+function planeEl(){const p=document.createElement("span");p.className="plane";p.setAttribute("aria-hidden","true");p.textContent="✈️";return p}
 function saleLine(e){
   const s=document.createElement("div");s.className="sale-line";
   const sl=localLine(e.saleDate,e.saleTime,e.saleTz);
@@ -662,7 +681,7 @@ function saleLine(e){
 }
 function saleRow(e){
   const d=parseYmd(e.saleDate);
-  const el=document.createElement("article");el.className="ticket salerow";
+  const el=document.createElement("article");el.className="ticket salerow"+(e.abroad?" abroad":"");
   const stub=document.createElement("div");stub.className="stub";
   stub.innerHTML='<span class="md"></span><span class="wd"></span><span class="tm"></span>';
   stub.querySelector(".md").textContent=(d.getMonth()+1)+"/"+d.getDate();
@@ -684,6 +703,7 @@ function saleRow(e){
   if(going.length){const crew=document.createElement("div");crew.className="crew";
     going.forEach(mid=>{const mm=S.members[mid];const c=document.createElement("span");c.className="chip";c.appendChild(avatar(mm));c.appendChild(document.createTextNode(mm.name));crew.appendChild(c)});
     body.appendChild(crew)}
+  if(e.abroad)stub.appendChild(planeEl());
   el.append(stub,body);return el;
 }
 
@@ -738,7 +758,10 @@ const hintEv=()=>tzHint("evDate","evTimeH","evTimeM","evTz","evTzHint");
 const hintSale=()=>tzHint("evSaleDate","evSaleH","evSaleM","evSaleTz","evSaleTzHint");
 ["evDate","evTimeH","evTimeM"].forEach(id=>$(id).addEventListener("change",hintEv));
 ["evSaleDate","evSaleH","evSaleM"].forEach(id=>$(id).addEventListener("change",hintSale));
-$("evTz").addEventListener("change",()=>{if(!saleTzTouched){$("evSaleTz").value=$("evTz").value;hintSale()}hintEv()});
+let abroadTouched=false;
+$("evAbroad").addEventListener("change",()=>{abroadTouched=true});
+$("evTz").addEventListener("change",()=>{if(!saleTzTouched){$("evSaleTz").value=$("evTz").value;hintSale()}
+  if(!abroadTouched)$("evAbroad").checked=$("evTz").value!==TW;hintEv()});
 $("evSaleTz").addEventListener("change",()=>{saleTzTouched=true;hintSale()});
 function localLine(date,time,zone){
   if(!zone||zone===TW||!time)return "";
@@ -894,6 +917,7 @@ function openEvent(id){
   const tz=ZONES.some(z=>z[0]===e.tz)?e.tz:TW, stz=ZONES.some(z=>z[0]===e.saleTz)?e.saleTz:tz;
   const lv=convertTz(e.date,e.time,TW,tz), ls=convertTz(e.saleDate,e.saleTime,TW,stz);
   $("evTz").value=tz;$("evSaleTz").value=stz;saleTzTouched=!!id&&stz!==tz;
+  $("evAbroad").checked=!!e.abroad;abroadTouched=!!id;
   $("evTitle").value=e.title||"";$("evDate").value=lv.date||S.sel||ymd(new Date());
   setTime("evTimeH","evTimeM",lv.time);setTime("evSaleH","evSaleM",ls.time);
   $("evSaleDate").value=ls.date||"";$("evSaleUrl").value=e.saleUrl||"";
@@ -910,7 +934,7 @@ $("evForm").addEventListener("submit",async ev=>{
   if(!data.title||!data.date){$("evErr").textContent="活動名稱和日期都要填。";return}
   if(!data.saleDate&&data.saleTime){$("evErr").textContent="填了開賣時間，也要填開賣日期。";return}
   if(data.saleUrl&&!safeUrl(data.saleUrl)){$("evErr").textContent="售票網址要以 https:// 開頭。";return}
-  data.tz=$("evTz").value;data.saleTz=$("evSaleTz").value;
+  data.tz=$("evTz").value;data.saleTz=$("evSaleTz").value;data.abroad=$("evAbroad").checked;
   const tv=convertTz(data.date,data.time,data.tz,TW);data.date=tv.date;data.time=tv.time;
   if(data.saleDate){const ts=convertTz(data.saleDate,data.saleTime,data.saleTz,TW);data.saleDate=ts.date;data.saleTime=ts.time}
   const id=editing||uid();
