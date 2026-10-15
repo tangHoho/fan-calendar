@@ -103,19 +103,28 @@ fieldset.sale legend{font-weight:900;font-size:14px;padding:0 6px}
 .stub{background:var(--pop);color:var(--pop-ink);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 6px;position:relative;text-align:center}
 .ticket.going .stub{background:var(--mint)}
 .abroad-tag{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:900;border-radius:999px;padding:1px 9px;margin:6px 6px 0 0;background:#2B6CB0;color:#fff}
-.ticket.abroad .stub{overflow:hidden}
-.plane{position:absolute;top:8px;left:-24px;font-size:18px;line-height:1;pointer-events:none}
-.pill .pl{display:inline-block}
+.ticket.abroad .stub{overflow:hidden;padding-top:40px}
+.sky{position:absolute;top:0;left:0;right:12px;height:34px;pointer-events:none}
+.sky::before{content:"";position:absolute;left:8px;right:4px;top:19px;border-top:2px dotted currentColor;opacity:.35}
+.plane{position:absolute;top:8px;left:0;width:22px;height:22px;color:inherit}
+.plane svg{display:block;width:100%;height:100%;fill:currentColor}
+.pill .pl{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.15em;margin-right:1px}
+.pill .pl svg{width:100%;height:100%;fill:currentColor;display:block}
 .chk{display:flex;align-items:center;gap:10px;margin-top:14px;font-weight:700;font-size:15px;background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer}
 .chk input{width:20px;height:20px;accent-color:#2B6CB0;flex:none}
 .chk small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px}
 @media (prefers-reduced-motion:no-preference){
-  .plane{animation:fly 3.2s ease-in-out infinite}
-  @keyframes fly{0%{transform:translate(0,14px) rotate(-12deg);opacity:0}12%{opacity:1}80%{opacity:1}100%{transform:translate(124px,-6px) rotate(-12deg);opacity:0}}
+  .plane{animation:fly 3.6s cubic-bezier(.45,.05,.55,.95) infinite}
+  @keyframes fly{
+    0%{transform:translate(-22px,4px) rotate(-14deg);opacity:0}
+    15%{opacity:1}
+    50%{transform:translate(28px,-3px) rotate(0deg)}
+    85%{opacity:1}
+    100%{transform:translate(80px,3px) rotate(12deg);opacity:0}}
   .pill .pl{animation:bob 1.6s ease-in-out infinite}
   @keyframes bob{0%,100%{transform:translate(0,0)}50%{transform:translate(2px,-2px)}}
 }
-@media (prefers-reduced-motion:reduce){.plane{left:auto;right:6px;top:6px}}
+@media (prefers-reduced-motion:reduce){.plane{left:50%;margin-left:-11px}}
 .stub .md{font-family:"Huninn","Noto Sans TC",sans-serif;font-size:26px;line-height:1}
 .stub .wd{font-size:13px;margin-top:6px;font-weight:700;opacity:.9}
 .stub .tm{font-size:13px;margin-top:2px;opacity:.9}
@@ -363,7 +372,7 @@ label.f{display:block;font-size:14px;font-weight:700;margin:12px 0 4px}
 
 <script type="module">
 /* ============ 版本 ============ */
-const APP_VERSION = "1.7.0";
+const APP_VERSION = "1.7.1";
 const APP_UPDATED = "2026-10-15";
 /* Firebase 金鑰放在同資料夾的 firebase-config.js，更新 index.html 不會蓋掉它 */
 /* ============================== */
@@ -603,7 +612,7 @@ function render(){
     pills.slice(0,showN).forEach(({e,sale})=>{
       const p=document.createElement("span");
       p.className="pill"+(sale?" sale":(S.me&&S.rsvps[rsvpId(e.id,S.me)]?" mine":""));
-      if(e.abroad){const pl=document.createElement("span");pl.className="pl";pl.textContent="✈️";p.appendChild(pl)}
+      if(e.abroad){const pl=document.createElement("span");pl.className="pl";pl.innerHTML=PLANE_SVG;p.appendChild(pl)}
       p.appendChild(document.createTextNode((sale&&!narrow?"🎫":"")+e.title));b.appendChild(p)});
     if(pills.length>showN){const mo=document.createElement("span");mo.className="more";mo.textContent="+"+(pills.length-showN);b.appendChild(mo)}
     const parts=[];if(list.length)parts.push(list.length+" 個活動");if(sales.length)parts.push(sales.length+" 個搶票");
@@ -670,7 +679,9 @@ function ticket(e){
 
 function fmtDay(s){const d=parseYmd(s);return (d.getMonth()+1)+"/"+d.getDate()+"（"+WD[d.getDay()]+"）"}
 function safeUrl(u){return /^https?:\/\//i.test(u||"")?u:""}
-function planeEl(){const p=document.createElement("span");p.className="plane";p.setAttribute("aria-hidden","true");p.textContent="✈️";return p}
+const PLANE_SVG='<svg viewBox="0 0 24 24"><g transform="rotate(90 12 12)"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></g></svg>';
+function planeEl(){const s=document.createElement("span");s.className="sky";s.setAttribute("aria-hidden","true");
+  const p=document.createElement("span");p.className="plane";p.innerHTML=PLANE_SVG;s.appendChild(p);return s}
 function saleLine(e){
   const s=document.createElement("div");s.className="sale-line";
   const sl=localLine(e.saleDate,e.saleTime,e.saleTz);
